@@ -5,7 +5,13 @@ import AddressAutocomplete, { PlaceResult } from "./AddressAutocomplete";
 
 type LngLat = { lng: number; lat: number };
 
-function pointInPoly(pt: LngLat, poly: number[][][]): boolean {
+// GeoJSON helpers
+type Ring = number[][];          // [[lng,lat], ...]
+type Polygon = Ring[];           // [ Ring, Ring, ... ]
+type Polygons = Polygon[];       // [ Polygon, Polygon, ... ]
+
+function pointInPoly(pt: LngLat, poly: Polygon): boolean {
+  // Even-odd ray casting against all rings
   let inside = false;
   for (const ring of poly) {
     let j = ring.length - 1;
@@ -28,23 +34,34 @@ function loadPolygon(): (pt: LngLat & { postal?: string }) => boolean {
     process.env.SERVICE_AREA_GEOJSON ||
     "";
   const zip = process.env.NEXT_PUBLIC_SERVICE_ZIP || "33584";
+
+  // No polygon provided → fallback to ZIP matching
   if (!raw) return (pt) => pt.postal === zip;
+
   try {
     const geo = JSON.parse(raw);
-    const collectPolys = (g: any): number[][][] => {
+
+    const collectPolys = (g: any): Polygons => {
       if (!g) return [];
-      if (g.type === "Polygon") return [g.coordinates];
-      if (g.type === "MultiPolygon") return g.coordinates.flat();
+      if (g.type === "Polygon") return [g.coordinates as Polygon];
+      if (g.type === "MultiPolygon") return g.coordinates as Polygons;
       return [];
     };
-    let polys: number[][][] = [];
-    if (geo.type === "FeatureCollection")
+
+    let polys: Polygons = [];
+    if (geo.type === "FeatureCollection") {
       polys = geo.features.flatMap((f: any) => collectPolys(f.geometry));
-    else if (geo.type === "Feature") polys = collectPolys(geo.geometry);
-    else polys = collectPolys(geo);
+    } else if (geo.type === "Feature") {
+      polys = collectPolys(geo.geometry);
+    } else {
+      polys = collectPolys(geo);
+    }
+
     if (polys.length === 0) return (pt) => pt.postal === zip;
+
     return (pt) => polys.some((poly) => pointInPoly(pt, poly));
   } catch {
+    // Bad JSON → fallback to ZIP
     return (pt) => pt.postal === zip;
   }
 }
@@ -114,7 +131,6 @@ export default function CoverageGate({ offer }: { offer?: string }) {
         <button
           className="btn text-center"
           onClick={() => {
-            // ensure it’s saved, then navigate
             try {
               sessionStorage.setItem("hx.addr", JSON.stringify(selected));
             } catch {}
