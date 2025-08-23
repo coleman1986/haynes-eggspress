@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-.input { @apply border rounded px-3 py-2 w-full; }
-.btn { @apply bg-black text-white rounded px-4 py-2; }
-.card { @apply border rounded p-4 shadow-sm; }
+/* Layout helper */
+.container { @apply max-w-lg mx-auto px-4; }
+
+/* Card */
+.card { @apply bg-white rounded-2xl shadow p-4; }
+
+/* Inputs */
+.input {
+  @apply w-full rounded-xl border border-gray-300 bg-white
+         px-4 py-3 text-base placeholder-gray-400
+         focus:outline-none focus:ring-2 focus:ring-emerald-500;
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center
+         rounded-xl bg-emerald-600 text-white
+         px-4 py-3 text-base font-medium
+         hover:bg-emerald-700 active:bg-emerald-800
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Labels */
+label { @apply text-sm font-medium text-gray-700; }
