@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  phone         String?
+  createdAt     DateTime       @default(now())
+  addresses     Address[]
+  subscriptions Subscription[]
+}
+
+model Address {
+  id       String  @id @default(cuid())
+  userId   String
+  line1    String
+  line2    String?
+  city     String
+  state    String
+  postal   String
+  lat      Float?
+  lng      Float?
+  notes    String?
+  photoUrl String?
+  user     User    @relation(fields: [userId], references: [id])
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id             String   @id @default(cuid())
+  userId         String
+  addressId      String
+  planDozens     Int
+  stripeCustomer String
+  stripeSubId    String
+  status         String
+  deliveryDay    Int // 1=Mon … 5=Fri
+  nextDelivery   DateTime
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id])
+  address        Address  @relation(fields: [addressId], references: [id])
+  orders         Order[]
+}
+
+model Order {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  deliveryDate   DateTime
+  dozens         Int
+  status         String
+  driverNotes    String?
+  createdAt      DateTime     @default(now())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([deliveryDate])
+}
+
+model Interest {
+  id          String   @id @default(cuid())
+  email       String
+  postal      String
+  fullAddress String?
+  placeId     String?
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now())
+  note        String?
+}

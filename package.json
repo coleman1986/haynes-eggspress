@@ -1,0 +1,29 @@
+{
+  "name": "haynes-eggspress",
+  "private": true,
+  "version": "0.2.2",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "prisma:dev": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.15.0",
+    "autoprefixer": "^10.4.19",
+    "date-fns": "^3.6.0",
+    "next": "^15.5.0",
+    "postcss": "^8.4.38",
+    "prisma": "^5.15.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "stripe": "^16.0.0",
+    "tailwindcss": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/google.maps": "^3.55.5",
+    "@types/react": "19.1.10",
+    "stripe-event-types": "^3.1.0",
+    "typescript": "^5.5.3"
+  }
+}
