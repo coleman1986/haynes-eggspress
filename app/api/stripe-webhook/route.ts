@@ -1,54 +1,49 @@
+// app/api/stripe-webhook/route.ts
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
+// Webhooks must run on Node (NOT Edge)
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
+});
 
-function nextWeekday(weekday: number, from = new Date()) {
-  const d = new Date(from);
-  const diff = (weekday + 7 - d.getDay()) % 7 || 7;
-  d.setDate(d.getDate() + diff);
-  d.setHours(8, 0, 0, 0);
-  return d;
-}
-
-export async function POST(req: NextRequest) {
-  const sig = req.headers.get("stripe-signature")!;
-  const raw = await req.text();
-
-  let event: Stripe.Event;
+export async function POST(req: Request) {
   try {
-    event = stripe.webhooks.constructEvent(raw, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+    // 1) Read the raw body for signature verification
+    const payload = await req.text();
+    const sig = req.headers.get("stripe-signature");
+    const secret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!sig || !secret) {
+      console.error("Missing stripe-signature header or STRIPE_WEBHOOK_SECRET");
+      return NextResponse.json({ error: "Misconfigured webhook" }, { status: 400 });
+    }
+
+    // 2) Verify & construct the event
+    const event = stripe.webhooks.constructEvent(payload, sig, secret);
+
+    // 3) Handle events (log for now)
+    switch (event.type) {
+      case "checkout.session.completed":
+        console.log("✅ checkout.session.completed", (event.data.object as any).id);
+        break;
+      case "customer.subscription.created":
+        console.log("✅ subscription.created", (event.data.object as any).id);
+        break;
+      case "customer.subscription.updated":
+        console.log("✅ subscription.updated", (event.data.object as any).id);
+        break;
+      default:
+        console.log("ℹ️  Unhandled event", event.type);
+        break;
+    }
+
+    // 4) Acknowledge
+    return NextResponse.json({ received: true });
   } catch (err: any) {
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    console.error("Webhook error:", err?.message || err);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 400 });
   }
-
-  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
-    const sub = event.data.object as Stripe.Subscription;
-    const customerId = sub.customer as string;
-    const qty = sub.items.data[0]?.quantity ?? 1;
-    the_weekday: {
-      // Stripe metadata may not sync on some updates; default to Thu
-    }
-    const weekdayMeta = (sub.metadata?.weekday ?? "4");
-    const weekday = Math.min(5, Math.max(1, parseInt(weekdayMeta, 10) || 4));
-
-    const local = await prisma.subscription.findFirst({ where: { stripeCustomer: customerId } });
-    if (local) {
-      await prisma.subscription.update({
-        where: { id: local.id },
-        data: {
-          stripeSubId: sub.id,
-          planDozens: qty,
-          deliveryDay: weekday,
-          status: sub.status === "active" ? "active" : sub.status,
-          nextDelivery: nextWeekday(weekday),
-        },
-      });
-    }
-  }
-
-  return NextResponse.json({ received: true });
 }
