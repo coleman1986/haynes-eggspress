@@ -15,29 +15,28 @@ const prisma =
   });
 if (process.env.NODE_ENV !== "production") globalThis.__prisma = prisma;
 
-// Support both shapes: { params: { id } } OR { params: Promise<{ id }> }
-type Ctx = { params: { id: string } } | { params: Promise<{ id: string }> };
-
-export async function POST(req: Request, ctx: Ctx) {
-  // ✅ Admin auth guard (protects API if called directly)
-  const store = await cookies(); // async on newer Next
+// ✅ Signature that matches your Next version (params is a Promise)
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  // Admin auth guard
+  const store = await cookies();
   const token = store.get("hx_admin")?.value;
   const payload = token ? verifyToken(token) : null;
   if (payload?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ✅ Get order id from ctx (works with both Next param shapes)
-  // @ts-ignore – narrow at runtime
-  const raw = (ctx as any).params;
-  const { id } = raw?.then ? await raw : raw;
+  // Resolve id from promised params
+  const { id } = await params;
   if (!id) {
     return NextResponse.json({ error: "Missing order id" }, { status: 400 });
   }
 
   // Optional JSON body: { status?: string; driverNotes?: string }
   let body: any = null;
-  try { body = await req.json(); } catch { /* body optional */ }
+  try { body = await req.json(); } catch {}
   const newStatus: string = body?.status ?? "delivered";
   const driverNotes: string | undefined = body?.driverNotes;
 
@@ -47,7 +46,7 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json({ error: `Order ${id} not found` }, { status: 404 });
   }
 
-  // Update using your schema: status:String (+ optional driverNotes)
+  // Update order (status + optional driver notes)
   const updated = await prisma.order.update({
     where: { id },
     data: {
@@ -55,8 +54,7 @@ export async function POST(req: Request, ctx: Ctx) {
       ...(typeof driverNotes === "string" && driverNotes.trim()
         ? { driverNotes: driverNotes.trim() }
         : {}),
-      // If you later add deliveredAt: DateTime, set it here:
-      // deliveredAt: new Date(),
+      // deliveredAt: new Date(), // add this if you include it in the schema later
     },
   });
 
