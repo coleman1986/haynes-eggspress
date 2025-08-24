@@ -9,7 +9,7 @@ export default function HomePage() {
         <div className="flex justify-center">
           <Image src="/logo-256.png" alt="Haynes Eggspress" width={96} height={96} />
         </div>
-        <h1 className="text-3xl font-bold mt-2">Fresh, organic, local eggs—on your porch every week.</h1>
+        <h1 className="text-3xl font-bold mt-2">Fresh, local, local eggs—on your porch every week.</h1>
         <p className="text-gray-600 mt-2">Start in under 5 minutes. $7 per dozen, delivery included.</p>
         <div className="mt-4 flex gap-3 justify-center">
           <a className="btn" href="/signup/plan">Start Weekly Delivery</a>
@@ -20,8 +20,8 @@ export default function HomePage() {
       {/* Value props */}
       <section className="grid sm:grid-cols-3 gap-4">
         <div className="card">
-          <h3 className="font-semibold">Organic</h3>
-          <p className="text-sm text-gray-600 mt-1">Laid by organically raised hens. No antibiotics, ever.</p>
+          <h3 className="font-semibold">local</h3>
+          <p className="text-sm text-gray-600 mt-1">Laid by localally raised hens. No antibiotics, ever.</p>
         </div>
         <div className="card">
           <h3 className="font-semibold">Local</h3>
@@ -53,8 +53,8 @@ export default function HomePage() {
             <p>We’re launching around 33584 to start. Use the address box when you start to check coverage.</p>
           </div>
           <div>
-            <p className="font-medium">Are the eggs organic?</p>
-            <p>Yes—our hens are fed organic feed and raised without antibiotics.</p>
+            <p className="font-medium">Are the eggs local?</p>
+            <p>Yes—our hens are fed local feed and raised without antibiotics.</p>
           </div>
           <div>
             <p className="font-medium">What if I’m not home?</p>
