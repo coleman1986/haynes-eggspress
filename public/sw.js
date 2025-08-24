@@ -1,4 +1,4 @@
-const CACHE = "hx-v1";
+const CACHE = "hx-v2";
 const CORE = [
   "/", "/manifest.json", "/logo-256.png", "/logo-transparent.png",
   "/icon-192.png", "/icon-512.png",

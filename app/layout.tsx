@@ -4,7 +4,7 @@ import SWRegister from "@/components/SWRegister";
 
 export const metadata = {
   title: "Haynes Eggspress",
-  description: "Fresh local eggs, porch-delivered weekly in 33584.",
+  description: "Fresh local eggs, porch-delivered weekly in 33584 and beyond.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
