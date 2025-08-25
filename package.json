@@ -28,4 +28,10 @@
     "stripe-event-types": "^3.1.0",
     "typescript": "^5.5.3"
   }
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "postinstall": "prisma generate"
+  }
 }
