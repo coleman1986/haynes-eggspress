@@ -22,8 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Try to find the Stripe customer id from your DB first (preferred)
-    // - Find the user by email
+    // Prefer your DB for the Stripe customer id
     const user = await prisma.user.findUnique({ where: { email } });
     let customerId: string | null = null;
 
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Fallback: look up by email in Stripe (may return the most recent)
+    // Fallback: ask Stripe by email
     if (!customerId) {
       const list = await stripe.customers.list({ email, limit: 1 });
       customerId = list.data[0]?.id || null;
@@ -56,9 +55,10 @@ export async function POST(req: Request) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
       "http://localhost:3000";
 
+    // ✅ Include the token on return so /manage can auto-open the portal again if needed
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/manage`,
+      return_url: `${origin}/manage?token=${encodeURIComponent(token)}`,
     });
 
     return NextResponse.json({ url: session.url });
