@@ -1,3 +1,4 @@
+/// <reference types="google.maps" />
 "use client";
 
 import Script from "next/script";
@@ -16,7 +17,7 @@ export type PlaceResult = {
 
 function extractComponents(place: google.maps.places.PlaceResult): PlaceResult | null {
   if (!place || !place.address_components || !place.geometry?.location) return null;
-  const comp = Object.fromEntries(place.address_components.map(c => [c.types[0], c]));
+  const comp = Object.fromEntries(place.address_components.map((c) => [c.types[0], c]));
   const get = (type: string) => comp[type]?.long_name || comp[type]?.short_name;
   const line1 = [get("street_number"), get("route")].filter(Boolean).join(" ");
   const city = get("locality") || get("sublocality") || get("administrative_area_level_2");
@@ -28,7 +29,10 @@ function extractComponents(place: google.maps.places.PlaceResult): PlaceResult |
     placeId: place.place_id || "",
     lat: typeof loc.lat === "function" ? loc.lat() : (loc as any).lat,
     lng: typeof loc.lng === "function" ? loc.lng() : (loc as any).lng,
-    postal, city, state, line1
+    postal,
+    city,
+    state,
+    line1,
   };
 }
 
@@ -43,7 +47,7 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const [ready, setReady] = useState(false);
 
-  // Seed the input once with an initial address string (if provided)
+  // Seed input once with initial address (if provided)
   useEffect(() => {
     if (initialValue && inputRef.current && !inputRef.current.value) {
       inputRef.current.value = initialValue;
@@ -55,7 +59,7 @@ export default function AddressAutocomplete({
     const ac = new google.maps.places.Autocomplete(inputRef.current!, {
       fields: ["address_components", "formatted_address", "geometry", "place_id"],
       types: ["address"],
-      componentRestrictions: { country: "us" }
+      componentRestrictions: { country: "us" },
     });
     ac.addListener("place_changed", () => {
       const place = ac.getPlace();
